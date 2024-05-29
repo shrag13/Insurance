@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font: 16px Arial;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  text-align: center;
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.5s ease;
+}
+
+.autocomplete {
+  position: relative;
+  display: inline-block;
+  width: 300px;
+}
+
+input {
+  border: 1px solid transparent;
+  background-color: #f1f1f1;
+  padding: 10px;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+input[type=text] {
+  width: 100%;
+}
+
+input[type=submit] {
+  background-color: DodgerBlue;
+  color: #fff;
+  cursor: pointer;
+}
+
+.autocomplete-items {
+  position: absolute;
+  border: 1px solid #d4d4d4;
+  border-bottom: none;
+  border-top: none;
+  z-index: 99;
+  top: 100%;
+  left: 0;
+  right: 0;
+  transform: translateY(-10%);
+}
+
+.autocomplete-items div {
+  padding: 10px;
+  cursor: pointer;
+  background-color: #fff;
+  border-bottom: 1px solid #d4d4d4;
+}
+
+.autocomplete-items div:hover {
+  background-color: #e9e9e9;
+}
+
+.autocomplete-active {
+  background-color: DodgerBlue !important;
+  color: #ffffff;
+}
+
+form.moved-up {
+  transform: translateY(10px);
+}
+</style>
+</head>
+<body>
+
+<h2>Autocomplete</h2>
+
+<p>Start typing:</p>
+
+<form autocomplete="off" onsubmit="showSelectedCompany(event)" id="searchForm">
+  <div class="autocomplete">
+    <input id="myInput" type="text" name="myCompany" placeholder="Insurance Company">
+  </div>
+  <input type="submit">
+</form>
+
+<p id="selectedCompany"></p>
+
+<script>
+function autocomplete(inp, arr) {
+  var currentFocus;
+  inp.addEventListener("input", function(e) {
+      var a, b, i, val = this.value;
+      closeAllLists();
+      if (!val) { return false;}
+      currentFocus = -1;
+      a = document.createElement("DIV");
+      a.setAttribute("id", this.id + "autocomplete-list");
+      a.setAttribute("class", "autocomplete-items");
+      this.parentNode.appendChild(a);
+      for (i = 0; i < arr.length; i++) {
+        if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+          b = document.createElement("DIV");
+          b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+          b.innerHTML += arr[i].substr(val.length);
+          b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+          b.addEventListener("click", function(e) {
+              inp.value = this.getElementsByTagName("input")[0].value;
+              closeAllLists();
+          });
+          a.appendChild(b);
+        }
+      }
+  });
+  inp.addEventListener("keydown", function(e) {
+      var x = document.getElementById(this.id + "autocomplete-list");
+      if (x) x = x.getElementsByTagName("div");
+      if (e.keyCode == 40) {
+        currentFocus++;
+        addActive(x);
+      } else if (e.keyCode == 38) {
+        currentFocus--;
+        addActive(x);
+      } else if (e.keyCode == 13) {
+        e.preventDefault();
+        if (currentFocus > -1) {
+          if (x) x[currentFocus].click();
+        }
+      }
+  });
+  function addActive(x) {
+    if (!x) return false;
+    removeActive(x);
+    if (currentFocus >= x.length) currentFocus = 0;
+    if (currentFocus < 0) currentFocus = (x.length - 1);
+    x[currentFocus].classList.add("autocomplete-active");
+  }
+  function removeActive(x) {
+    for (var i = 0; i < x.length; i++) {
+      x[i].classList.remove("autocomplete-active");
+    }
+  }
+  function closeAllLists(elmnt) {
+    var x = document.getElementsByClassName("autocomplete-items");
+    for (var i = 0; i < x.length; i++) {
+      if (elmnt != x[i] && elmnt != inp) {
+        x[i].parentNode.removeChild(x[i]);
+      }
+    }
+  }
+  document.addEventListener("click", function (e) {
+      closeAllLists(e.target);
+  });
+}
+
+function showSelectedCompany(event) {
+  event.preventDefault();
+  var company = document.getElementById("myInput").value;
+  var info = companies[company];
+  var displayInfo = `
+    <p><strong>Company:</strong> ${company}</p>
+    <p><strong>Phone:</strong> ${info ? info.phone || 'N/A' : 'N/A'}</p>
+    <p><strong>Email:</strong> ${info ? info.email || 'N/A' : 'N/A'}</p>
+    <p><strong>Website:</strong> ${info ? info.website || 'N/A' : 'N/A'}</p>
+  `;
+  document.getElementById("selectedCompany").innerHTML = displayInfo;
+  document.getElementById("searchForm").classList.add("moved-up");
+}
+
+var companies = {
+  "Adirondack": {
+    phone: "877-629-8003",
+    email: "service@ngic.com",
+    website: "aie-ny.com"
+  },
+  "Allstate": {
+    phone: "800-255-7828",
+    email: "Claims@Claims.Allstate.com",
+    website: "allstate.com"
+  },
+  "Arc Claims": {
+    phone: "877-714-1100",
+    website: "arcclaims.com"
+  },
+  "Chubb": {
+    phone: "800-252-4670",
+    email: "customercare@chubb.com",
+    website: "chubb.com"
+  },
+  "Church Mutual": {
+    phone: "800-554-2642",
+    email: "customerservice@churchmutual.com",
+    website: "churchmutual.com"
+  },
+    "Copart": {
+    phone: "631-776-0994",
+    email: "member.services@copart.com",
+    website: "copart.com"
+  },
+    "Country Wide": {
+    phone: "212-514-7000",
+    website: "cwico.com"
+  },
+    "CSAA": {
+    phone: "718-451-4100",
+    website: "csaa-insurance.aaa.com"
+  },
+    "Erie": {
+    phone: "800-367-3743",
+    website: "erieinsurance.com"
+  },
+    "Esurance": {
+    phone: "800-378-7262",
+    website: "esurance.com"
+  },
+    "Farmers": {
+    phone: "800-435-7764",
+    email: "usw_ndc_help@farmersinsurance.com",
+    website: "www.farmers.com/cmp/s/findrep?SO=01"
+  },
+    "Fleet Response": {
+    phone: "888-280-4458",
+    email: "contact@fleetresponse.com",
+    website: "fleetresponse.com"
+  },
+    "Geico": {
+    phone: "866-345-0278",
+    email: "2-Way Email",
+    website: "geico.com"
+  },
+    "Guard": {
+    phone: "800-673-2465",
+    email: "csr@guard.com",
+    website: "guard.com"
+  },
+    "Hanover": {
+    phone: "800-922-8427",
+    email: "incidents@hanover.com",
+    website: "hanover.com"
+  },
+    "IAA": {
+    phone: "239-479-6046",
+    email: "infouk@iaai.com",
+    website: "aai.com"
+  },
+    "Intact": {
+    phone: "866-464-2424",
+    email: "info@intact.net",
+    website: "intact.ca"
+  },
+    "Kemper": {
+    phone: "800-353-6737",
+    email: "lifm28@kemper.com",
+    website: "kemper.com"
+  },
+    "Liberty Mutual": {
+    phone: "800-225-2467",
+    email: "imaging@libertymutual.com	",
+    website: "libertymutual.com"
+  },
+    "National Gen": {
+    phone: "800-468-3466",
+    email: "claims@ngic.com",
+    website: "claims.nationalgeneral.com"
+  },
+    "Nationwide": {
+    phone: "800-421-3535",
+    email: "macioe1@nationwide.com (Eva)",
+    website: "nationwide.com"
+  },
+    "NGIC": {
+    phone: "800-468-3466",
+    email: "claims@ngic.com",
+    website: "claims.nationalgeneral.com"
+  },
+    "NJ Manufacturers": {
+    phone: "800-232-6600",
+    email: "",
+    website: "njm.com"
+  },
+    "NJM": {
+    phone: "800-232-6600",
+    website: "njm.com"
+  },
+    "NYCM": {
+    phone: "800-234-6926",
+    email: "myclaim@nycm.com",
+    website: "nycm.com"
+  },
+    "Plymouth Rock": {
+    phone: "888-564-1001",
+    email: "rockcare@plymouthrock.com",
+    website: "plymouthrock.com"
+  },
+    "Progressive": {
+    phone: "800-776-4737",
+    email: "upload@email.progressive.com",
+    website: "account.apps.progressive.com/access/ez-claim/claim-info"
+  },
+    "Sagamore": {
+    phone: "800-317-9402",
+    website: "sagamoreinsured.com"
+  },
+    "Sedgewick": {
+    phone: "585-368-7700",
+    email: "Help@sedgwickcms.com",
+    website: "sedgwick.com"
+  },
+    "StateFarm": {
+    phone: "800-782-8332",
+    email: "statefarmclaims@statefarm.com",
+    website: "statefarm.com"
+  },
+    "Travelers": {
+    phone: "800-252-4633",
+    email: "trvinquiry@travelers.com",
+    website: "travelers.com/claimstatus/error"
+  },
+    "USAA": {
+    phone: "210-531-8722",
+    email: "",
+    website: "usaa.com"
+  },
+    "": {
+    phone: "",
+    email: "",
+    website: ""
+  },
+};
+
+autocomplete(document.getElementById("myInput"), Object.keys(companies));
+</script>
+
+</body>
+</html>
